@@ -1,9 +1,9 @@
 # S3 Bucket for project storage
 resource "aws_s3_bucket" "main" {
-  bucket = "${var.project}-${var.environment}-${var.bucket_name}"
+  bucket = var.bucket_name != "" ? "${var.project}-${var.environment}-${var.bucket_name}" : "${var.project}-${var.environment}"
 
   tags = {
-    Name        = "${var.project}-${var.environment}-${var.bucket_name}"
+    Name        = var.bucket_name != "" ? "${var.project}-${var.environment}-${var.bucket_name}" : "${var.project}-${var.environment}"
     Environment = var.environment
     Project     = var.project
   }

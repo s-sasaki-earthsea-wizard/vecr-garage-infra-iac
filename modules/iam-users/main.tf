@@ -20,7 +20,7 @@ resource "aws_iam_group_policy_attachment" "s3_access" {
 
 # Custom policy for S3 access (if no external policy provided)
 resource "aws_iam_policy" "s3_access" {
-  count       = var.s3_policy_arn == null && var.s3_bucket_arn != null ? 1 : 0
+  count       = var.s3_policy_arn == null ? 1 : 0
   name        = "${var.project}-${var.environment}-s3-access-policy"
   description = "Policy to allow access to project S3 bucket"
 
@@ -57,7 +57,7 @@ resource "aws_iam_policy" "s3_access" {
 
 # Attach custom S3 policy to group
 resource "aws_iam_group_policy_attachment" "s3_access_custom" {
-  count      = var.s3_policy_arn == null && var.s3_bucket_arn != null ? 1 : 0
+  count      = var.s3_policy_arn == null ? 1 : 0
   group      = aws_iam_group.developers.name
   policy_arn = aws_iam_policy.s3_access[0].arn
 }
