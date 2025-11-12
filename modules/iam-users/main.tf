@@ -55,6 +55,76 @@ resource "aws_iam_group_policy_attachment" "s3_access_custom" {
   policy_arn = aws_iam_policy.s3_access[0].arn
 }
 
+# IAM Self-Service Policy (allow users to manage their own credentials)
+resource "aws_iam_policy" "self_service" {
+  name        = "${var.project}-${var.environment}-iam-self-service-policy"
+  description = "Policy to allow users to manage their own credentials"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowUsersToChangeTheirOwnPassword"
+        Effect = "Allow"
+        Action = [
+          "iam:ChangePassword"
+        ]
+        Resource = "arn:aws:iam::*:user/$${aws:username}"
+      },
+      {
+        Sid    = "AllowUsersToGetTheirOwnAccountInformation"
+        Effect = "Allow"
+        Action = [
+          "iam:GetAccountPasswordPolicy",
+          "iam:GetUser"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowUsersToManageTheirOwnMFA"
+        Effect = "Allow"
+        Action = [
+          "iam:CreateVirtualMFADevice",
+          "iam:DeleteVirtualMFADevice",
+          "iam:EnableMFADevice",
+          "iam:ResyncMFADevice",
+          "iam:DeactivateMFADevice"
+        ]
+        Resource = [
+          "arn:aws:iam::*:user/$${aws:username}",
+          "arn:aws:iam::*:mfa/$${aws:username}"
+        ]
+      },
+      {
+        Sid    = "AllowUsersToListMFADevices"
+        Effect = "Allow"
+        Action = [
+          "iam:ListMFADevices",
+          "iam:ListVirtualMFADevices"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowUsersToManageTheirOwnAccessKeys"
+        Effect = "Allow"
+        Action = [
+          "iam:CreateAccessKey",
+          "iam:DeleteAccessKey",
+          "iam:UpdateAccessKey",
+          "iam:ListAccessKeys"
+        ]
+        Resource = "arn:aws:iam::*:user/$${aws:username}"
+      }
+    ]
+  })
+}
+
+# Attach self-service policy to group
+resource "aws_iam_group_policy_attachment" "self_service" {
+  group      = aws_iam_group.developers.name
+  policy_arn = aws_iam_policy.self_service.arn
+}
+
 # IAM Users
 resource "aws_iam_user" "members" {
   for_each = { for user in var.team_members : user.username => user }
