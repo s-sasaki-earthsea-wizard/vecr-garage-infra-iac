@@ -41,11 +41,11 @@ variable "tags" {
 }
 
 # ------------------------------------------------------------
-# OpenAI Configuration
+# OpenRouter Configuration
 # ------------------------------------------------------------
 
-variable "openai_api_key" {
-  description = "OpenAI API Key"
+variable "open_router_api_key" {
+  description = "OpenRouter API Key"
   type        = string
   sensitive   = true
 }
@@ -123,6 +123,67 @@ variable "users" {
   type = list(object({
     username = string
     ssh_keys = list(string)
+  }))
+  default = []
+}
+
+# ------------------------------------------------------------
+# S3 Configuration
+# ------------------------------------------------------------
+
+variable "s3_bucket_name" {
+  description = "S3 bucket name suffix"
+  type        = string
+  default     = "storage"
+}
+
+variable "s3_enable_versioning" {
+  description = "Enable versioning for S3 bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_block_public_access" {
+  description = "Block all public access to S3 bucket"
+  type        = bool
+  default     = true
+}
+
+variable "s3_enable_lifecycle_rules" {
+  description = "Enable lifecycle rules for S3 bucket"
+  type        = bool
+  default     = false
+}
+
+variable "s3_transition_to_ia_days" {
+  description = "Number of days before transitioning objects to STANDARD_IA"
+  type        = number
+  default     = 30
+}
+
+variable "s3_transition_to_glacier_days" {
+  description = "Number of days before transitioning objects to GLACIER"
+  type        = number
+  default     = 90
+}
+
+variable "s3_expiration_days" {
+  description = "Number of days before objects expire"
+  type        = number
+  default     = 365
+}
+
+# ------------------------------------------------------------
+# IAM Users Configuration
+# ------------------------------------------------------------
+
+variable "team_members" {
+  description = "List of team members with their IAM configurations"
+  type = list(object({
+    username          = string
+    role              = string
+    create_access_key = bool
+    console_access    = bool
   }))
   default = []
 }

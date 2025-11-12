@@ -3,8 +3,8 @@ aws_access_key = "YOUR_AWS_ACCESS_KEY"  # DO NOT PUSH ACTUAL KEY! This is just a
 aws_secret_key = "YOUR_AWS_SECRET_KEY"  # DO NOT PUSH ACTUAL KEY! This is just a placeholder.
 aws_region     = "ap-northeast-1"
 
-# OpenAI API Key
-openai_api_key = "sk-proj-*******"  # DO NOT PUSH ACTUAL KEY! This is just a placeholder.
+# OpenRouter API Key
+open_router_api_key = "sk-or-v1-example"  # DO NOT PUSH ACTUAL KEY! This is just a placeholder.
 
 # Environment Configuration
 environment = "dev"
@@ -50,3 +50,32 @@ create_nat_gateway = false
 
 # Security Configuration
 ssh_allowed_cidr_blocks = ["0.0.0.0/0"]  # Restrict this in production!
+
+# S3 Configuration
+s3_bucket_name = "your-custom-name"
+
+# IAM Team Members Configuration
+# This list defines team members who will have access to the project resources
+# Each member will be added to the developers IAM group with access to:
+# - Secrets Manager (read OpenRouter API keys, etc.)
+# - S3 bucket (read/write)
+team_members = [
+  {
+    username          = "admin"           # Your username
+    role              = "admin"
+    create_access_key = true              # Create programmatic access keys
+    console_access    = false             # Enable AWS Console login (will require password reset on first login)
+  },
+  {
+    username          = "member1"
+    role              = "developer"
+    create_access_key = true
+    console_access    = false
+  },
+  {
+    username          = "member2"
+    role              = "developer"
+    create_access_key = true
+    console_access    = false
+  }
+]

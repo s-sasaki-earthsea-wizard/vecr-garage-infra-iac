@@ -100,12 +100,13 @@ make destroy
 aws ec2 create-key-pair --key-name MyKeyPair --query 'KeyMaterial' --output text > ~/.aws/vecr-ssh-key.pem
 ```
 
-### EC2インスタンスからSecrets managerをクエリする
+### IAMユーザーでSecrets Managerをクエリする
 
-EC2インスタンスからAPIキーなどのセンシティブな情報は以下のようにクエリできます。
+APIキーなどのセンシティブな情報はIAMユーザーのプロフィールを使ってaws cliで以下のようにクエリできます。
 
 ```bash
-aws secretsmanager get-secret-value --secret-id vecr-garage-dev-secrets-v1 | jq -r '.SecretString | fromjson | .openai_api_key'
+# IAMユーザーのプロフィール名を指定してクエリ
+aws secretsmanager get-secret-value --secret-id vecr-garage-dev-secrets-v1 --profile vecr-garage-dev-<username> | jq -r '.SecretString | fromjson | .open_router_api_key'
 ```
 
 ## 注意事項
