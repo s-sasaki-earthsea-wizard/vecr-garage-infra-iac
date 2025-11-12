@@ -96,3 +96,19 @@ module "s3" {
   transition_to_glacier_days = var.s3_transition_to_glacier_days
   expiration_days            = var.s3_expiration_days
 }
+
+# IAM Users Module
+module "iam_users" {
+  source = "../../modules/iam-users"
+
+  project     = var.project
+  environment = var.environment
+
+  team_members = var.team_members
+
+  # Attach Secrets Manager access policy
+  secrets_manager_policy_arn = module.secrets_manager.access_policy_arn
+
+  # Grant access to S3 bucket
+  s3_bucket_arn = module.s3.bucket_arn
+}

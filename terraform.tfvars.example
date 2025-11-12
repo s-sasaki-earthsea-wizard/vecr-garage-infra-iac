@@ -53,3 +53,29 @@ ssh_allowed_cidr_blocks = ["0.0.0.0/0"]  # Restrict this in production!
 
 # S3 Configuration
 s3_bucket_name = "your-custom-name"
+
+# IAM Team Members Configuration
+# This list defines team members who will have access to the project resources
+# Each member will be added to the developers IAM group with access to:
+# - Secrets Manager (read OpenRouter API keys, etc.)
+# - S3 bucket (read/write)
+team_members = [
+  {
+    username          = "admin"           # Your username
+    role              = "admin"
+    create_access_key = true              # Create programmatic access keys
+    console_access    = false             # Enable AWS Console login (will require password reset on first login)
+  },
+  {
+    username          = "member1"
+    role              = "developer"
+    create_access_key = true
+    console_access    = false
+  },
+  {
+    username          = "member2"
+    role              = "developer"
+    create_access_key = true
+    console_access    = false
+  }
+]

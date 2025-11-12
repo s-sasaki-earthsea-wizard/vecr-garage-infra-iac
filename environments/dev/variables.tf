@@ -172,3 +172,18 @@ variable "s3_expiration_days" {
   type        = number
   default     = 365
 }
+
+# ------------------------------------------------------------
+# IAM Users Configuration
+# ------------------------------------------------------------
+
+variable "team_members" {
+  description = "List of team members with their IAM configurations"
+  type = list(object({
+    username          = string
+    role              = string
+    create_access_key = bool
+    console_access    = bool
+  }))
+  default = []
+}

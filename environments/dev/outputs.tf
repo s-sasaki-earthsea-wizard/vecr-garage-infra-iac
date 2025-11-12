@@ -55,3 +55,29 @@ output "private_subnet_ids" {
   description = "List of IDs of private subnets"
   value       = module.networking.private_subnet_ids
 }
+
+# ------------------------------------------------------------
+# IAM Users Outputs
+# ------------------------------------------------------------
+
+output "iam_group_name" {
+  description = "Name of the IAM developers group"
+  value       = module.iam_users.group_name
+}
+
+output "iam_user_names" {
+  description = "Map of usernames to IAM user names"
+  value       = module.iam_users.user_names
+}
+
+output "iam_access_keys" {
+  description = "Map of usernames to access key IDs (use terraform output -json to see)"
+  value       = module.iam_users.access_keys
+  sensitive   = true
+}
+
+output "iam_secret_access_keys" {
+  description = "Map of usernames to secret access keys (use terraform output -json to see)"
+  value       = module.iam_users.secret_access_keys
+  sensitive   = true
+}
