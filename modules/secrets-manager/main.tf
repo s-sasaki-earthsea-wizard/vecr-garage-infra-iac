@@ -34,6 +34,13 @@ resource "aws_iam_policy" "secret_access" {
         ]
         Effect   = "Allow"
         Resource = aws_secretsmanager_secret.secret.arn
+      },
+      {
+        Action = [
+          "secretsmanager:ListSecrets"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
       }
     ]
   })

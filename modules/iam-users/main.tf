@@ -29,8 +29,15 @@ resource "aws_iam_policy" "s3_access" {
     Statement = [
       {
         Action = [
-          "s3:ListBucket",
+          "s3:ListAllMyBuckets",
           "s3:GetBucketLocation"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      {
+        Action = [
+          "s3:ListBucket"
         ]
         Effect   = "Allow"
         Resource = var.s3_bucket_arn
