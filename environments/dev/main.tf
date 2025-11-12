@@ -25,27 +25,24 @@ provider "aws" {
   }
 }
 
-# Secrets Manager for storing sensitive information
-resource "aws_secretsmanager_secret" "main" {
-  name = "${var.project}-${var.environment}-secrets-${var.secrets_version}"
+# Secrets Manager Module for storing sensitive information
+module "secrets_manager" {
+  source = "../../modules/secrets-manager"
+
+  project     = var.project
+  environment = var.environment
+  secret_name = "secrets-${var.secrets_version}"
   description = "Secrets for ${var.project} ${var.environment} environment"
 
-  tags = {
-    Name        = "${var.project}-${var.environment}-secrets-${var.secrets_version}"
-    Environment = var.environment
+  secret_map = {
+    project             = var.project
+    environment         = var.environment
+    open_router_api_key = var.open_router_api_key
+    created_at          = timestamp()
+    initial_setup       = "completed"
   }
-}
 
-# Initial secret version with basic information
-resource "aws_secretsmanager_secret_version" "initial" {
-  secret_id = aws_secretsmanager_secret.main.id
-  secret_string = jsonencode({
-    project     = var.project
-    environment = var.environment
-    openai_api_key = var.openai_api_key
-    created_at  = timestamp()
-    initial_setup = "completed"
-  })
+  create_access_policy = true
 }
 
 # IAM Module
@@ -60,9 +57,9 @@ module "iam" {
 module "networking" {
   source = "../../modules/networking"
 
-  project     = var.project
-  environment = var.environment
-  vpc_cidr    = var.vpc_cidr
+  project            = var.project
+  environment        = var.environment
+  vpc_cidr           = var.vpc_cidr
   availability_zones = var.availability_zones
   create_nat_gateway = var.create_nat_gateway
 }
@@ -89,13 +86,13 @@ module "networking" {
 module "s3" {
   source = "../../modules/s3"
 
-  project                   = var.project
-  environment               = var.environment
-  bucket_name               = var.s3_bucket_name
-  enable_versioning         = var.s3_enable_versioning
-  block_public_access       = var.s3_block_public_access
-  enable_lifecycle_rules    = var.s3_enable_lifecycle_rules
-  transition_to_ia_days     = var.s3_transition_to_ia_days
+  project                    = var.project
+  environment                = var.environment
+  bucket_name                = var.s3_bucket_name
+  enable_versioning          = var.s3_enable_versioning
+  block_public_access        = var.s3_block_public_access
+  enable_lifecycle_rules     = var.s3_enable_lifecycle_rules
+  transition_to_ia_days      = var.s3_transition_to_ia_days
   transition_to_glacier_days = var.s3_transition_to_glacier_days
-  expiration_days           = var.s3_expiration_days
+  expiration_days            = var.s3_expiration_days
 }

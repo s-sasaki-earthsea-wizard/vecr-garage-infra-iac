@@ -41,11 +41,11 @@ variable "tags" {
 }
 
 # ------------------------------------------------------------
-# OpenAI Configuration
+# OpenRouter Configuration
 # ------------------------------------------------------------
 
-variable "openai_api_key" {
-  description = "OpenAI API Key"
+variable "open_router_api_key" {
+  description = "OpenRouter API Key"
   type        = string
   sensitive   = true
 }
