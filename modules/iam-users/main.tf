@@ -62,6 +62,40 @@ resource "aws_iam_group_policy_attachment" "s3_access_custom" {
   policy_arn = aws_iam_policy.s3_access[0].arn
 }
 
+# CloudWatch Logs read-only access policy
+resource "aws_iam_policy" "cloudwatch_logs_readonly" {
+  name        = "${var.project}-${var.environment}-cloudwatch-logs-readonly-policy"
+  description = "Policy to allow read-only access to CloudWatch Logs for Lambda functions"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "CloudWatchLogsReadOnly"
+        Effect = "Allow"
+        Action = [
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:FilterLogEvents",
+          "logs:GetLogEvents",
+          "logs:StartQuery",
+          "logs:GetQueryResults"
+        ]
+        Resource = [
+          "arn:aws:logs:*:*:log-group:/aws/lambda/${var.project}-${var.environment}-*",
+          "arn:aws:logs:*:*:log-group:/aws/lambda/${var.project}-${var.environment}-*:*"
+        ]
+      }
+    ]
+  })
+}
+
+# Attach CloudWatch Logs policy to group
+resource "aws_iam_group_policy_attachment" "cloudwatch_logs_readonly" {
+  group      = aws_iam_group.developers.name
+  policy_arn = aws_iam_policy.cloudwatch_logs_readonly.arn
+}
+
 # IAM Self-Service Policy (allow users to manage their own credentials)
 resource "aws_iam_policy" "self_service" {
   name        = "${var.project}-${var.environment}-iam-self-service-policy"
