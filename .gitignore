@@ -58,3 +58,5 @@ environments/dev/tfplan
 # .vscode
 .vscode
 
+# Lambda function zip files
+*.zip
