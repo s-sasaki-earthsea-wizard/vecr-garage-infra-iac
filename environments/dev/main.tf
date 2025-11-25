@@ -25,32 +25,82 @@ provider "aws" {
   }
 }
 
-# Secrets Manager Module for storing sensitive information
-module "secrets_manager" {
+# Secrets Manager Module for Lambda secrets (LLM APIs + Discord credentials)
+module "secrets_manager_lambda" {
   source = "../../modules/secrets-manager"
 
   project     = var.project
   environment = var.environment
-  secret_name = "secrets-${var.secrets_version}"
-  description = "Secrets for ${var.project} ${var.environment} environment"
+  secret_name = "lambda-secrets"
+  description = "Secrets for Lambda functions (LLM APIs, Discord Bot)"
 
   secret_map = {
-    project             = var.project
-    environment         = var.environment
+    # LLM APIs
+    anthropic_api_key   = var.anthropic_api_key
     open_router_api_key = var.open_router_api_key
-    created_at          = timestamp()
-    initial_setup       = "completed"
+
+    # Discord Bot Tokens
+    kasen_bot_token         = var.kasen_bot_token
+    karasuno_endo_bot_token = var.karasuno_endo_bot_token
+    darcy_bot_token         = var.darcy_bot_token
+
+    # Discord Webhook URLs
+    kasen_times_webhook         = var.kasen_times_webhook
+    karasuno_endo_times_webhook = var.karasuno_endo_times_webhook
+    rusudan_times_webhook       = var.rusudan_times_webhook
+    darcy_times_webhook         = var.darcy_times_webhook
   }
 
   create_access_policy = true
 }
 
-# IAM Module
+# Secrets Manager Module for App secrets (EC2/ECS/Lightsail)
+module "secrets_manager_app" {
+  source = "../../modules/secrets-manager"
+
+  project     = var.project
+  environment = var.environment
+  secret_name = "app-secrets"
+  description = "Secrets for application (Flask, etc.)"
+
+  secret_map = {
+    flask_secret_key = var.flask_secret_key
+  }
+
+  create_access_policy = true
+}
+
+# IAM Module (for EC2)
 module "iam" {
   source = "../../modules/iam"
 
   project     = var.project
   environment = var.environment
+}
+
+# IAM Role for Discord Bot Service
+module "iam_discord_bot" {
+  source = "../../modules/iam-service-roles"
+
+  project     = var.project
+  environment = var.environment
+  role_name   = "discord-bot-role"
+
+  # Trust policy - can be assumed by Lambda, ECS, etc.
+  enable_lambda_assume = true
+  enable_ecs_assume    = false  # Enable when migrating to ECS
+  enable_ec2_assume    = false
+
+  # Secrets Manager access
+  enable_secrets_manager_access = true
+  secrets_manager_secret_arns   = [module.secrets_manager_lambda.secret_arn]
+
+  # DynamoDB access (enable when DynamoDB module is created)
+  enable_dynamodb_access = false
+  # dynamodb_table_arns    = [module.dynamodb.table_arn]
+
+  # CloudWatch Logs
+  enable_cloudwatch_logs = true
 }
 
 # Networking Module
@@ -158,8 +208,11 @@ module "iam_users" {
 
   team_members = var.team_members
 
-  # Attach Secrets Manager access policy
-  secrets_manager_policy_arn = module.secrets_manager.access_policy_arn
+  # Attach Secrets Manager access policies (both lambda and app secrets)
+  secrets_manager_policy_arns = [
+    module.secrets_manager_lambda.access_policy_arn,
+    module.secrets_manager_app.access_policy_arn
+  ]
 
   # Grant access to S3 bucket
   s3_bucket_arn = module.s3.bucket_arn

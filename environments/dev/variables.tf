@@ -41,11 +41,73 @@ variable "tags" {
 }
 
 # ------------------------------------------------------------
-# OpenRouter Configuration
+# LLM API Configuration
 # ------------------------------------------------------------
+
+variable "anthropic_api_key" {
+  description = "Anthropic API Key"
+  type        = string
+  sensitive   = true
+}
 
 variable "open_router_api_key" {
   description = "OpenRouter API Key"
+  type        = string
+  sensitive   = true
+}
+
+# ------------------------------------------------------------
+# Discord Configuration
+# ------------------------------------------------------------
+
+variable "kasen_bot_token" {
+  description = "Discord Bot Token for Kasen"
+  type        = string
+  sensitive   = true
+}
+
+variable "karasuno_endo_bot_token" {
+  description = "Discord Bot Token for Karasuno Endo"
+  type        = string
+  sensitive   = true
+}
+
+variable "darcy_bot_token" {
+  description = "Discord Bot Token for Darcy"
+  type        = string
+  sensitive   = true
+}
+
+variable "kasen_times_webhook" {
+  description = "Discord Webhook URL for Kasen Times"
+  type        = string
+  sensitive   = true
+}
+
+variable "karasuno_endo_times_webhook" {
+  description = "Discord Webhook URL for Karasuno Endo Times"
+  type        = string
+  sensitive   = true
+}
+
+variable "rusudan_times_webhook" {
+  description = "Discord Webhook URL for Rusudan Times"
+  type        = string
+  sensitive   = true
+}
+
+variable "darcy_times_webhook" {
+  description = "Discord Webhook URL for Darcy Times"
+  type        = string
+  sensitive   = true
+}
+
+# ------------------------------------------------------------
+# Flask Configuration
+# ------------------------------------------------------------
+
+variable "flask_secret_key" {
+  description = "Flask Session Secret Key"
   type        = string
   sensitive   = true
 }
@@ -77,15 +139,6 @@ variable "create_elastic_ip" {
 variable "detailed_monitoring_enabled" {
   description = "Whether to enable detailed monitoring"
   type        = bool
-}
-
-# ------------------------------------------------------------
-# Secrets Manager Configuration
-# ------------------------------------------------------------
-
-variable "secrets_version" {
-  description = "Secrets version"
-  type        = string
 }
 
 # ------------------------------------------------------------
