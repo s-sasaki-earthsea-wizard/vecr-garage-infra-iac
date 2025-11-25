@@ -63,3 +63,33 @@ resource "aws_s3_bucket_lifecycle_configuration" "main" {
     }
   }
 }
+
+# ------------------------------------------------------------
+# Lambda Event Notification Configuration
+# ------------------------------------------------------------
+
+# Lambda permission to allow S3 to invoke the function
+resource "aws_lambda_permission" "allow_s3_invoke" {
+  count = var.enable_lambda_notification ? 1 : 0
+
+  statement_id  = "AllowS3Invoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.lambda_function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.main.arn
+}
+
+# S3 bucket notification configuration
+resource "aws_s3_bucket_notification" "lambda_trigger" {
+  count  = var.enable_lambda_notification ? 1 : 0
+  bucket = aws_s3_bucket.main.id
+
+  lambda_function {
+    lambda_function_arn = var.lambda_function_arn
+    events              = var.notification_events
+    filter_prefix       = var.notification_filter_prefix
+    filter_suffix       = var.notification_filter_suffix
+  }
+
+  depends_on = [aws_lambda_permission.allow_s3_invoke]
+}

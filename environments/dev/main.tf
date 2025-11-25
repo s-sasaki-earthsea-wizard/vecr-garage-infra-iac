@@ -82,6 +82,50 @@ module "networking" {
 #   users         = var.users
 # }
 
+# Lambda Module for File Watcher
+module "lambda_file_watcher" {
+  source = "../../modules/lambda"
+
+  project       = var.project
+  environment   = var.environment
+  function_name = "file-watcher"
+  runtime       = "python3.12"
+  handler       = "lambda_handler.lambda_handler"
+  timeout       = 60
+  memory_size   = 512
+  description   = "Lambda function to process S3 file changes for backend-db-registration"
+
+  # Lambda function source code
+  source_dir  = "${path.root}/../../lambda_functions/file-watcher"
+  output_path = "${path.root}/../../lambda_functions/file-watcher.zip"
+
+  # Environment variables for Lambda function
+  environment_variables = {
+    ENVIRONMENT = var.environment
+    PROJECT     = var.project
+    # Add more environment variables as needed (DynamoDB table name, etc.)
+  }
+
+  # IAM permissions
+  enable_s3_access = true
+  s3_bucket_arns   = [module.s3.bucket_arn]
+
+  # DynamoDB access will be enabled when DynamoDB module is created
+  enable_dynamodb_access = false
+  # dynamodb_table_arns    = [module.dynamodb.table_arn]
+
+  # Secrets Manager access not needed for file-watcher
+  enable_secrets_manager_access = false
+
+  # VPC configuration (disabled for now, enable when needed for PostgreSQL/RDS)
+  enable_vpc = false
+  # vpc_subnet_ids         = module.networking.private_subnet_ids
+  # vpc_security_group_ids = [module.networking.default_security_group_id]
+
+  # CloudWatch Logs
+  log_retention_days = 30
+}
+
 # S3 Module
 module "s3" {
   source = "../../modules/s3"
@@ -95,6 +139,14 @@ module "s3" {
   transition_to_ia_days      = var.s3_transition_to_ia_days
   transition_to_glacier_days = var.s3_transition_to_glacier_days
   expiration_days            = var.s3_expiration_days
+
+  # Lambda notification configuration
+  enable_lambda_notification = true
+  lambda_function_arn        = module.lambda_file_watcher.function_arn
+  lambda_function_name       = module.lambda_file_watcher.function_name
+  notification_events        = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+  notification_filter_prefix = "data/"
+  notification_filter_suffix = ".yaml"
 }
 
 # IAM Users Module

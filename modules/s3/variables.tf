@@ -48,3 +48,43 @@ variable "expiration_days" {
   type        = number
   default     = 365
 }
+
+# ------------------------------------------------------------
+# Lambda Event Notification Configuration
+# ------------------------------------------------------------
+
+variable "enable_lambda_notification" {
+  description = "Enable Lambda function notification for S3 events"
+  type        = bool
+  default     = false
+}
+
+variable "lambda_function_arn" {
+  description = "ARN of the Lambda function to trigger on S3 events"
+  type        = string
+  default     = ""
+}
+
+variable "lambda_function_name" {
+  description = "Name of the Lambda function to trigger on S3 events"
+  type        = string
+  default     = ""
+}
+
+variable "notification_events" {
+  description = "List of S3 events that trigger the Lambda function"
+  type        = list(string)
+  default     = ["s3:ObjectCreated:*", "s3:ObjectRemoved:*"]
+}
+
+variable "notification_filter_prefix" {
+  description = "S3 object key prefix filter for notifications (e.g., 'data/')"
+  type        = string
+  default     = ""
+}
+
+variable "notification_filter_suffix" {
+  description = "S3 object key suffix filter for notifications (e.g., '.yaml')"
+  type        = string
+  default     = ""
+}
