@@ -41,11 +41,45 @@ variable "tags" {
 }
 
 # ------------------------------------------------------------
-# OpenRouter Configuration
+# LLM API Configuration
 # ------------------------------------------------------------
+
+variable "anthropic_api_key" {
+  description = "Anthropic API Key"
+  type        = string
+  sensitive   = true
+}
 
 variable "open_router_api_key" {
   description = "OpenRouter API Key"
+  type        = string
+  sensitive   = true
+}
+
+# ------------------------------------------------------------
+# Discord Configuration
+# ------------------------------------------------------------
+
+variable "discord_bot_tokens" {
+  description = "Discord Bot Tokens (bot_name => token)"
+  type        = map(string)
+  sensitive   = true
+  default     = {}
+}
+
+variable "discord_webhooks" {
+  description = "Discord Webhook URLs (webhook_name => url)"
+  type        = map(string)
+  sensitive   = true
+  default     = {}
+}
+
+# ------------------------------------------------------------
+# Flask Configuration
+# ------------------------------------------------------------
+
+variable "flask_secret_key" {
+  description = "Flask Session Secret Key"
   type        = string
   sensitive   = true
 }
@@ -77,15 +111,6 @@ variable "create_elastic_ip" {
 variable "detailed_monitoring_enabled" {
   description = "Whether to enable detailed monitoring"
   type        = bool
-}
-
-# ------------------------------------------------------------
-# Secrets Manager Configuration
-# ------------------------------------------------------------
-
-variable "secrets_version" {
-  description = "Secrets version"
-  type        = string
 }
 
 # ------------------------------------------------------------

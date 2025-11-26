@@ -4,11 +4,11 @@ resource "aws_iam_group" "developers" {
   path = "/"
 }
 
-# Attach Secrets Manager access policy to group
+# Attach Secrets Manager access policies to group
 resource "aws_iam_group_policy_attachment" "secrets_manager_access" {
-  count      = var.secrets_manager_policy_arn != null ? 1 : 0
+  for_each   = var.secrets_manager_policy_arns
   group      = aws_iam_group.developers.name
-  policy_arn = var.secrets_manager_policy_arn
+  policy_arn = each.value
 }
 
 # Attach S3 access policy to group (if provided)

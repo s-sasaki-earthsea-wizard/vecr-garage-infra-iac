@@ -2,20 +2,40 @@
 # Secrets Manager Outputs
 # ------------------------------------------------------------
 
-output "secrets_manager_secret_arn" {
-  description = "ARN of the Secrets Manager secret"
-  value       = module.secrets_manager.secret_arn
+output "secrets_manager_lambda_secret_arn" {
+  description = "ARN of the Lambda Secrets Manager secret"
+  value       = module.secrets_manager_lambda.secret_arn
   sensitive   = true
 }
 
-output "secrets_manager_secret_name" {
-  description = "Name of the Secrets Manager secret"
-  value       = module.secrets_manager.secret_name
+output "secrets_manager_lambda_secret_name" {
+  description = "Name of the Lambda Secrets Manager secret"
+  value       = module.secrets_manager_lambda.secret_name
 }
 
-output "secrets_manager_access_policy_arn" {
-  description = "ARN of the IAM policy for accessing the secret"
-  value       = module.secrets_manager.access_policy_arn
+output "secrets_manager_app_secret_arn" {
+  description = "ARN of the App Secrets Manager secret"
+  value       = module.secrets_manager_app.secret_arn
+  sensitive   = true
+}
+
+output "secrets_manager_app_secret_name" {
+  description = "Name of the App Secrets Manager secret"
+  value       = module.secrets_manager_app.secret_name
+}
+
+# ------------------------------------------------------------
+# IAM Service Roles Outputs
+# ------------------------------------------------------------
+
+output "discord_bot_role_arn" {
+  description = "ARN of the Discord Bot IAM role"
+  value       = module.iam_discord_bot.role_arn
+}
+
+output "discord_bot_role_name" {
+  description = "Name of the Discord Bot IAM role"
+  value       = module.iam_discord_bot.role_name
 }
 
 # ------------------------------------------------------------

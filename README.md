@@ -104,13 +104,56 @@ make destroy
 aws ec2 create-key-pair --key-name MyKeyPair --query 'KeyMaterial' --output text > ~/.aws/vecr-ssh-key.pem
 ```
 
-### IAMユーザーでSecrets Managerをクエリする
+### Secrets Managerの操作
 
-APIキーなどのセンシティブな情報はIAMユーザーのプロフィールを使ってaws cliで以下のようにクエリできます。
+APIキーなどのセンシティブな情報はAWS Secrets Managerで管理されています。
+
+#### シークレットの構成
+
+| シークレット名 | 用途 | 含まれるキー |
+|---------------|------|-------------|
+| `vecr-garage-dev-lambda-secrets` | Lambda関数用 | LLM APIキー、Discord Bot Token、Webhook URL |
+| `vecr-garage-dev-app-secrets` | アプリケーション用 | Flask Secret Key など |
+
+#### Makeターゲットで操作
+
+```bash
+# プロジェクトの全シークレット一覧
+make secret-list-all
+
+# Lambda secretsのキー一覧（デフォルト）
+make secret-list
+
+# App secretsのキー一覧
+make secret-list SECRET=app-secrets
+
+# 特定のキーの値を取得
+make secret-get KEY=anthropic_api_key
+
+# App secretsから取得
+make secret-get KEY=flask_secret_key SECRET=app-secrets
+```
+
+#### AWS CLIで直接操作
 
 ```bash
 # IAMユーザーのプロフィール名を指定してクエリ
-aws secretsmanager get-secret-value --secret-id vecr-garage-dev-secrets-v1 --profile vecr-garage-dev-<username> | jq -r '.SecretString | fromjson | .open_router_api_key'
+aws secretsmanager get-secret-value \
+  --secret-id vecr-garage-dev-lambda-secrets \
+  --profile vecr-garage-dev-<username> \
+  | jq -r '.SecretString | fromjson | .open_router_api_key'
+```
+
+#### 新しいシークレットの追加方法
+
+Discord Botやwebhookを追加する場合、`terraform.tfvars`のmap変数に追加するだけで自動的にSecrets Managerに反映されます：
+
+```hcl
+discord_bot_tokens = {
+  kasen         = "..."
+  karasuno_endo = "..."
+  new_bot       = "新しいトークン"  # ← 追加
+}
 ```
 
 ## Lambda関数のテスト
@@ -318,6 +361,58 @@ The following environment variables are required:
 - `AWS_PROFILE`: AWS authentication profile name
 - `ENVIRONMENT`: Target environment (dev/staging/prod)
 - `PROJECT`: Project name
+
+## Secrets Manager Operations
+
+Sensitive information such as API keys is managed in AWS Secrets Manager.
+
+### Secrets Configuration
+
+| Secret Name | Purpose | Keys Included |
+|-------------|---------|---------------|
+| `vecr-garage-dev-lambda-secrets` | For Lambda functions | LLM API keys, Discord Bot Tokens, Webhook URLs |
+| `vecr-garage-dev-app-secrets` | For applications | Flask Secret Key, etc. |
+
+### Operations via Make Targets
+
+```bash
+# List all secrets in the project
+make secret-list-all
+
+# List keys in Lambda secrets (default)
+make secret-list
+
+# List keys in App secrets
+make secret-list SECRET=app-secrets
+
+# Get a specific key value
+make secret-get KEY=anthropic_api_key
+
+# Get from App secrets
+make secret-get KEY=flask_secret_key SECRET=app-secrets
+```
+
+### Direct AWS CLI Operations
+
+```bash
+# Query using IAM user profile
+aws secretsmanager get-secret-value \
+  --secret-id vecr-garage-dev-lambda-secrets \
+  --profile vecr-garage-dev-<username> \
+  | jq -r '.SecretString | fromjson | .open_router_api_key'
+```
+
+### Adding New Secrets
+
+To add a new Discord Bot or webhook, simply add it to the map variable in `terraform.tfvars` and it will automatically be reflected in Secrets Manager:
+
+```hcl
+discord_bot_tokens = {
+  kasen         = "..."
+  karasuno_endo = "..."
+  new_bot       = "new_token"  # ← Just add here
+}
+```
 
 ## Lambda Function Testing
 

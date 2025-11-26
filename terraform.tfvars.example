@@ -3,8 +3,38 @@ aws_access_key = "YOUR_AWS_ACCESS_KEY"  # DO NOT PUSH ACTUAL KEY! This is just a
 aws_secret_key = "YOUR_AWS_SECRET_KEY"  # DO NOT PUSH ACTUAL KEY! This is just a placeholder.
 aws_region     = "ap-northeast-1"
 
-# OpenRouter API Key
-open_router_api_key = "sk-or-v1-example"  # DO NOT PUSH ACTUAL KEY! This is just a placeholder.
+# ------------------------------------------------------------
+# LLM API Configuration
+# ------------------------------------------------------------
+anthropic_api_key   = "sk-ant-api03-example"  # DO NOT PUSH ACTUAL KEY!
+open_router_api_key = "sk-or-v1-example"      # DO NOT PUSH ACTUAL KEY!
+
+# ------------------------------------------------------------
+# Discord Configuration
+# ------------------------------------------------------------
+# Bot tokens and webhooks are stored as maps for scalability.
+# Add new bots/webhooks by simply adding new key-value pairs.
+
+discord_bot_tokens = {
+  kasen         = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  karasuno_endo = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  rusudan       = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  darcy         = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  # Add new bots here...
+}
+
+discord_webhooks = {
+  kasen_times         = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  karasuno_endo_times = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  rusudan_times       = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  darcy_times         = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  # Add new webhooks here...
+}
+
+# ------------------------------------------------------------
+# Flask Configuration
+# ------------------------------------------------------------
+flask_secret_key = "your-flask-secret-key"  # DO NOT PUSH ACTUAL KEY!
 
 # Environment Configuration
 environment = "dev"
@@ -39,9 +69,6 @@ users = [
     ]  # SSH key of user2
   }
 ]
-
-# Secrets Manager Configuration
-secrets_version = "v1"
 
 # Networking Configuration
 vpc_cidr = "10.0.0.0/16"
