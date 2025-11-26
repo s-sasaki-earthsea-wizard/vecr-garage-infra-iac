@@ -60,46 +60,18 @@ variable "open_router_api_key" {
 # Discord Configuration
 # ------------------------------------------------------------
 
-variable "kasen_bot_token" {
-  description = "Discord Bot Token for Kasen"
-  type        = string
+variable "discord_bot_tokens" {
+  description = "Discord Bot Tokens (bot_name => token)"
+  type        = map(string)
   sensitive   = true
+  default     = {}
 }
 
-variable "karasuno_endo_bot_token" {
-  description = "Discord Bot Token for Karasuno Endo"
-  type        = string
+variable "discord_webhooks" {
+  description = "Discord Webhook URLs (webhook_name => url)"
+  type        = map(string)
   sensitive   = true
-}
-
-variable "darcy_bot_token" {
-  description = "Discord Bot Token for Darcy"
-  type        = string
-  sensitive   = true
-}
-
-variable "kasen_times_webhook" {
-  description = "Discord Webhook URL for Kasen Times"
-  type        = string
-  sensitive   = true
-}
-
-variable "karasuno_endo_times_webhook" {
-  description = "Discord Webhook URL for Karasuno Endo Times"
-  type        = string
-  sensitive   = true
-}
-
-variable "rusudan_times_webhook" {
-  description = "Discord Webhook URL for Rusudan Times"
-  type        = string
-  sensitive   = true
-}
-
-variable "darcy_times_webhook" {
-  description = "Discord Webhook URL for Darcy Times"
-  type        = string
-  sensitive   = true
+  default     = {}
 }
 
 # ------------------------------------------------------------

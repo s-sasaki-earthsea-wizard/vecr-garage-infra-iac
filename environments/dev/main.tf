@@ -34,22 +34,17 @@ module "secrets_manager_lambda" {
   secret_name = "lambda-secrets"
   description = "Secrets for Lambda functions (LLM APIs, Discord Bot)"
 
-  secret_map = {
+  secret_map = merge(
     # LLM APIs
-    anthropic_api_key   = var.anthropic_api_key
-    open_router_api_key = var.open_router_api_key
-
-    # Discord Bot Tokens
-    kasen_bot_token         = var.kasen_bot_token
-    karasuno_endo_bot_token = var.karasuno_endo_bot_token
-    darcy_bot_token         = var.darcy_bot_token
-
-    # Discord Webhook URLs
-    kasen_times_webhook         = var.kasen_times_webhook
-    karasuno_endo_times_webhook = var.karasuno_endo_times_webhook
-    rusudan_times_webhook       = var.rusudan_times_webhook
-    darcy_times_webhook         = var.darcy_times_webhook
-  }
+    {
+      anthropic_api_key   = var.anthropic_api_key
+      open_router_api_key = var.open_router_api_key
+    },
+    # Discord Bot Tokens (dynamically from map)
+    { for k, v in var.discord_bot_tokens : "${k}_bot_token" => v },
+    # Discord Webhook URLs (dynamically from map)
+    { for k, v in var.discord_webhooks : "${k}_webhook" => v }
+  )
 
   create_access_policy = true
 }
@@ -209,10 +204,10 @@ module "iam_users" {
   team_members = var.team_members
 
   # Attach Secrets Manager access policies (both lambda and app secrets)
-  secrets_manager_policy_arns = [
-    module.secrets_manager_lambda.access_policy_arn,
-    module.secrets_manager_app.access_policy_arn
-  ]
+  secrets_manager_policy_arns = {
+    lambda_secrets = module.secrets_manager_lambda.access_policy_arn
+    app_secrets    = module.secrets_manager_app.access_policy_arn
+  }
 
   # Grant access to S3 bucket
   s3_bucket_arn = module.s3.bucket_arn

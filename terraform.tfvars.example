@@ -12,14 +12,24 @@ open_router_api_key = "sk-or-v1-example"      # DO NOT PUSH ACTUAL KEY!
 # ------------------------------------------------------------
 # Discord Configuration
 # ------------------------------------------------------------
-kasen_bot_token         = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
-karasuno_endo_bot_token = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
-rusudan_bot_token         = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+# Bot tokens and webhooks are stored as maps for scalability.
+# Add new bots/webhooks by simply adding new key-value pairs.
 
-kasen_times_webhook         = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
-karasuno_endo_times_webhook = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
-rusudan_times_webhook       = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
-darcy_times_webhook         = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+discord_bot_tokens = {
+  kasen         = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  karasuno_endo = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  rusudan       = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  darcy         = "YOUR_DISCORD_BOT_TOKEN"  # DO NOT PUSH ACTUAL TOKEN!
+  # Add new bots here...
+}
+
+discord_webhooks = {
+  kasen_times         = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  karasuno_endo_times = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  rusudan_times       = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  darcy_times         = "https://discord.com/api/webhooks/xxx/yyy"  # DO NOT PUSH ACTUAL URL!
+  # Add new webhooks here...
+}
 
 # ------------------------------------------------------------
 # Flask Configuration

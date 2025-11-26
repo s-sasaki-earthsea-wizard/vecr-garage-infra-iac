@@ -20,9 +20,9 @@ variable "team_members" {
 }
 
 variable "secrets_manager_policy_arns" {
-  description = "List of Secrets Manager access policy ARNs to attach"
-  type        = list(string)
-  default     = []
+  description = "Map of Secrets Manager access policy ARNs to attach (key => arn)"
+  type        = map(string)
+  default     = {}
 }
 
 variable "s3_policy_arn" {

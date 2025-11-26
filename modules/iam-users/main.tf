@@ -6,7 +6,7 @@ resource "aws_iam_group" "developers" {
 
 # Attach Secrets Manager access policies to group
 resource "aws_iam_group_policy_attachment" "secrets_manager_access" {
-  for_each   = toset(var.secrets_manager_policy_arns)
+  for_each   = var.secrets_manager_policy_arns
   group      = aws_iam_group.developers.name
   policy_arn = each.value
 }
