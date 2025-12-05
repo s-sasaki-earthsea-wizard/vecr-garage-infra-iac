@@ -34,3 +34,11 @@ output "s3_access_policy_arn" {
   description = "ARN of the S3 access policy (if created)"
   value       = length(aws_iam_policy.s3_access) > 0 ? aws_iam_policy.s3_access[0].arn : null
 }
+
+output "ssh_public_keys" {
+  description = "Map of username to SSH public key for Bastion access"
+  value = {
+    for user in var.team_members : user.username => user.ssh_public_key
+    if user.ssh_public_key != ""
+  }
+}

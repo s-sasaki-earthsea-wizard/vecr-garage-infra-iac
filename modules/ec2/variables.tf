@@ -40,7 +40,7 @@ variable "key_name" {
 variable "ssh_allowed_cidr_blocks" {
   description = "CIDR blocks allowed for SSH access"
   type        = list(string)
-  default     = ["0.0.0.0/0"]  # This is not recommended for production
+  default     = ["0.0.0.0/0"] # This is not recommended for production
 }
 
 variable "create_elastic_ip" {
