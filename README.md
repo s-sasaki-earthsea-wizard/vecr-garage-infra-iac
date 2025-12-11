@@ -174,7 +174,7 @@ Internet → Bastion (Public Subnet) → RDS PostgreSQL (Private Subnet)
 ```
 
 - **RDS**: PostgreSQL 16、db.t4g.micro、暗号化有効
-- **Bastion**: Ubuntu 24.04 Minimal (ARM64)、Spotインスタンス、psqlプリインストール
+- **Bastion**: Ubuntu 24.04 Minimal (ARM64)、On-Demandインスタンス、psqlプリインストール
 - **VPC Endpoints**: NAT Gateway不要でSecretsManager/S3にアクセス
 
 ### 接続方法
@@ -502,7 +502,7 @@ Internet → Bastion (Public Subnet) → RDS PostgreSQL (Private Subnet)
 ```
 
 - **RDS**: PostgreSQL 16, db.t4g.micro, encryption enabled
-- **Bastion**: Ubuntu 24.04 Minimal (ARM64), Spot instance, psql pre-installed
+- **Bastion**: Ubuntu 24.04 Minimal (ARM64), On-Demand instance, psql pre-installed
 - **VPC Endpoints**: Access SecretsManager/S3 without NAT Gateway
 
 ### Connection Methods

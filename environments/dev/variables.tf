@@ -265,9 +265,9 @@ variable "bastion_instance_type" {
 }
 
 variable "bastion_use_spot" {
-  description = "Use spot instance for Bastion"
+  description = "Use spot instance for Bastion (On-Demand recommended for start/stop support)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 # ------------------------------------------------------------
