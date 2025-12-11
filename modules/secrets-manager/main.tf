@@ -2,9 +2,9 @@
 resource "aws_secretsmanager_secret" "secret" {
   name        = "${var.project}-${var.environment}-${var.secret_name}"
   description = var.description
-  
+
   recovery_window_in_days = var.recovery_window_in_days
-  
+
   tags = {
     Name        = "${var.project}-${var.environment}-${var.secret_name}"
     Environment = var.environment

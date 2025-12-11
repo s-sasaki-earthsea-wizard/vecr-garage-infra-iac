@@ -15,6 +15,7 @@ variable "team_members" {
     role              = string
     create_access_key = bool
     console_access    = bool
+    ssh_public_key    = optional(string, "")
   }))
   default = []
 }
@@ -35,4 +36,26 @@ variable "s3_bucket_arn" {
   description = "ARN of the S3 bucket for access policy (used if s3_policy_arn is not provided)"
   type        = string
   default     = null
+}
+
+# ------------------------------------------------------------
+# Instance Management Configuration
+# ------------------------------------------------------------
+
+variable "enable_instance_management" {
+  description = "Enable RDS and EC2 instance start/stop permissions for developers"
+  type        = bool
+  default     = false
+}
+
+variable "rds_instance_arns" {
+  description = "List of RDS instance ARNs that developers can start/stop"
+  type        = list(string)
+  default     = []
+}
+
+variable "ec2_instance_arns" {
+  description = "List of EC2 instance ARNs that developers can start/stop"
+  type        = list(string)
+  default     = []
 }

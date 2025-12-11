@@ -83,7 +83,7 @@ module "iam_discord_bot" {
 
   # Trust policy - can be assumed by Lambda, ECS, etc.
   enable_lambda_assume = true
-  enable_ecs_assume    = false  # Enable when migrating to ECS
+  enable_ecs_assume    = false # Enable when migrating to ECS
   enable_ec2_assume    = false
 
   # Secrets Manager access
@@ -102,11 +102,13 @@ module "iam_discord_bot" {
 module "networking" {
   source = "../../modules/networking"
 
-  project            = var.project
-  environment        = var.environment
-  vpc_cidr           = var.vpc_cidr
-  availability_zones = var.availability_zones
-  create_nat_gateway = var.create_nat_gateway
+  project              = var.project
+  environment          = var.environment
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = var.availability_zones
+  create_nat_gateway   = var.create_nat_gateway
+  create_vpc_endpoints = var.create_vpc_endpoints
+  aws_region           = var.aws_region
 }
 
 # EC2 Module (Commented out - not needed for current setup)
@@ -203,12 +205,94 @@ module "iam_users" {
 
   team_members = var.team_members
 
-  # Attach Secrets Manager access policies (both lambda and app secrets)
-  secrets_manager_policy_arns = {
-    lambda_secrets = module.secrets_manager_lambda.access_policy_arn
-    app_secrets    = module.secrets_manager_app.access_policy_arn
-  }
+  # Attach Secrets Manager access policies (lambda, app, and db secrets)
+  secrets_manager_policy_arns = merge(
+    {
+      lambda_secrets = module.secrets_manager_lambda.access_policy_arn
+      app_secrets    = module.secrets_manager_app.access_policy_arn
+    },
+    var.create_rds ? { db_credentials = module.rds[0].db_credentials_access_policy_arn } : {}
+  )
 
   # Grant access to S3 bucket
   s3_bucket_arn = module.s3.bucket_arn
+
+  # Instance management permissions (RDS and EC2 start/stop)
+  # Note: Using wildcard pattern to avoid circular dependency with bastion module
+  enable_instance_management = var.create_rds || var.create_bastion
+  rds_instance_arns          = var.create_rds ? [module.rds[0].db_instance_arn] : []
+  ec2_instance_arns          = var.create_bastion ? ["arn:aws:ec2:*:*:instance/*"] : []
+}
+
+# =============================================================================
+# RDS PostgreSQL
+# =============================================================================
+
+# Security Group for Lambda to access RDS
+resource "aws_security_group" "lambda" {
+  count = var.create_rds ? 1 : 0
+
+  name        = "${var.project}-${var.environment}-lambda-sg"
+  description = "Security group for Lambda functions"
+  vpc_id      = module.networking.vpc_id
+
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.project}-${var.environment}-lambda-sg"
+    Environment = var.environment
+    Project     = var.project
+  }
+}
+
+# RDS Module
+module "rds" {
+  count  = var.create_rds ? 1 : 0
+  source = "../../modules/rds"
+
+  project     = var.project
+  environment = var.environment
+
+  vpc_id     = module.networking.vpc_id
+  subnet_ids = module.networking.private_subnet_ids
+
+  instance_class    = var.rds_instance_class
+  engine_version    = var.rds_engine_version
+  allocated_storage = var.rds_allocated_storage
+  multi_az          = var.rds_multi_az
+
+  # Allow access from Lambda and Bastion
+  allowed_security_group_ids = concat(
+    var.create_rds ? [aws_security_group.lambda[0].id] : [],
+    var.create_bastion ? [module.bastion[0].security_group_id] : []
+  )
+}
+
+# =============================================================================
+# Bastion Host
+# =============================================================================
+
+module "bastion" {
+  count  = var.create_bastion ? 1 : 0
+  source = "../../modules/bastion"
+
+  project     = var.project
+  environment = var.environment
+
+  vpc_id    = module.networking.vpc_id
+  subnet_id = module.networking.public_subnet_ids[0]
+
+  instance_type     = var.bastion_instance_type
+  use_spot_instance = var.bastion_use_spot
+
+  # SSH public keys from team members
+  ssh_public_keys = module.iam_users.ssh_public_keys
+
+  allowed_ssh_cidr_blocks = var.ssh_allowed_cidr_blocks
 }

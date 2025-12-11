@@ -16,10 +16,14 @@ AWS上に必要なリソースを構築・管理します。
 ├── global/              # グローバルリソース
 │   └── iam-global/      # グローバルIAMポリシー
 ├── modules/             # 再利用可能なTerraformモジュール
+│   ├── bastion/        # Bastionホスト（SSHジャンプサーバー）
 │   ├── ec2/            # EC2インスタンス関連
 │   ├── iam/            # IAMロール・ポリシー関連
+│   ├── iam-service-roles/ # サービス用IAMロール
+│   ├── iam-users/      # IAMユーザー管理
 │   ├── lambda/         # Lambda関数関連
-│   ├── networking/     # ネットワーク関連
+│   ├── networking/     # ネットワーク関連（VPC Endpoints含む）
+│   ├── rds/            # RDS PostgreSQL関連
 │   ├── s3/             # S3バケット関連
 │   └── secrets-manager/# Secrets Manager関連
 ├── lambda_functions/   # Lambda関数のソースコード
@@ -114,6 +118,7 @@ APIキーなどのセンシティブな情報はAWS Secrets Managerで管理さ�
 |---------------|------|-------------|
 | `vecr-garage-dev-lambda-secrets` | Lambda関数用 | LLM APIキー、Discord Bot Token、Webhook URL |
 | `vecr-garage-dev-app-secrets` | アプリケーション用 | Flask Secret Key など |
+| `vecr-garage-dev-db-credentials` | RDS認証情報 | host, port, username, password, dbname |
 
 #### Makeターゲットで操作
 
@@ -155,6 +160,71 @@ discord_bot_tokens = {
   new_bot       = "新しいトークン"  # ← 追加
 }
 ```
+
+## RDS PostgreSQL
+
+### 概要
+
+プライベートサブネット内にRDS PostgreSQLインスタンスをデプロイし、Bastionホスト経由でアクセスします。
+
+### アーキテクチャ
+
+```
+Internet → Bastion (Public Subnet) → RDS PostgreSQL (Private Subnet)
+```
+
+- **RDS**: PostgreSQL 16、db.t4g.micro、暗号化有効
+- **Bastion**: Ubuntu 24.04 Minimal (ARM64)、On-Demandインスタンス、psqlプリインストール
+- **VPC Endpoints**: NAT Gateway不要でSecretsManager/S3にアクセス
+
+### 接続方法
+
+#### 1. 認証情報の確認
+
+```bash
+make rds-credentials
+```
+
+出力例:
+```
+============================================================
+RDS Connection Credentials
+============================================================
+Host:     vecr-garage-dev-db.xxx.ap-northeast-1.rds.amazonaws.com
+Port:     5432
+Database: vecr
+Username: vecr_admin
+Password: xxxxxxxx
+============================================================
+```
+
+#### 2. Bastion経由でRDSに接続
+
+```bash
+# Bastionにログイン
+make ssh-bastion
+
+# Bastion上でpsqlを実行
+psql -h <RDS_HOST> -U vecr_admin -d vecr
+```
+
+#### 3. SSHトンネル経由（ローカルから接続）
+
+```bash
+# ターミナル1: SSHトンネルを作成
+make rds-tunnel
+
+# ターミナル2: ローカルからpsqlで接続
+psql -h localhost -p 5432 -U vecr_admin -d vecr
+```
+
+### Makeターゲット
+
+| ターゲット | 説明 |
+|-----------|------|
+| `make ssh-bastion` | Bastionホストに接続 |
+| `make rds-tunnel` | RDSへのSSHトンネルを作成（localhost:5432） |
+| `make rds-credentials` | RDS認証情報を表示 |
 
 ## Lambda関数のテスト
 
@@ -283,10 +353,14 @@ It builds and manages necessary resources on AWS.
 ├── global/              # Global resources
 │   └── iam-global/      # Global IAM policies
 ├── modules/             # Reusable Terraform modules
+│   ├── bastion/        # Bastion host (SSH jump server)
 │   ├── ec2/            # EC2 instance related
 │   ├── iam/            # IAM roles and policies
+│   ├── iam-service-roles/ # Service-specific IAM roles
+│   ├── iam-users/      # IAM user management
 │   ├── lambda/         # Lambda function related
-│   ├── networking/     # Networking related
+│   ├── networking/     # Networking related (incl. VPC Endpoints)
+│   ├── rds/            # RDS PostgreSQL related
 │   ├── s3/             # S3 bucket related
 │   └── secrets-manager/# Secrets Manager related
 ├── lambda_functions/   # Lambda function source code
@@ -372,6 +446,7 @@ Sensitive information such as API keys is managed in AWS Secrets Manager.
 |-------------|---------|---------------|
 | `vecr-garage-dev-lambda-secrets` | For Lambda functions | LLM API keys, Discord Bot Tokens, Webhook URLs |
 | `vecr-garage-dev-app-secrets` | For applications | Flask Secret Key, etc. |
+| `vecr-garage-dev-db-credentials` | RDS credentials | host, port, username, password, dbname |
 
 ### Operations via Make Targets
 
@@ -413,6 +488,58 @@ discord_bot_tokens = {
   new_bot       = "new_token"  # ← Just add here
 }
 ```
+
+## RDS PostgreSQL
+
+### Overview
+
+Deploy an RDS PostgreSQL instance in a private subnet, accessible via Bastion host.
+
+### Architecture
+
+```
+Internet → Bastion (Public Subnet) → RDS PostgreSQL (Private Subnet)
+```
+
+- **RDS**: PostgreSQL 16, db.t4g.micro, encryption enabled
+- **Bastion**: Ubuntu 24.04 Minimal (ARM64), On-Demand instance, psql pre-installed
+- **VPC Endpoints**: Access SecretsManager/S3 without NAT Gateway
+
+### Connection Methods
+
+#### 1. Check Credentials
+
+```bash
+make rds-credentials
+```
+
+#### 2. Connect via Bastion
+
+```bash
+# Login to Bastion
+make ssh-bastion
+
+# Run psql on Bastion
+psql -h <RDS_HOST> -U vecr_admin -d vecr
+```
+
+#### 3. SSH Tunnel (Connect from local)
+
+```bash
+# Terminal 1: Create SSH tunnel
+make rds-tunnel
+
+# Terminal 2: Connect via psql locally
+psql -h localhost -p 5432 -U vecr_admin -d vecr
+```
+
+### Make Targets
+
+| Target | Description |
+|--------|-------------|
+| `make ssh-bastion` | Connect to Bastion host |
+| `make rds-tunnel` | Create SSH tunnel to RDS (localhost:5432) |
+| `make rds-credentials` | Display RDS credentials |
 
 ## Lambda Function Testing
 

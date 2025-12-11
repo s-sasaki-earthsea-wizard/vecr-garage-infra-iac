@@ -166,6 +166,97 @@ resource "aws_iam_group_policy_attachment" "self_service" {
   policy_arn = aws_iam_policy.self_service.arn
 }
 
+# =============================================================================
+# Instance Management Policies (RDS and EC2 start/stop)
+# =============================================================================
+
+# RDS Instance Management Policy
+resource "aws_iam_policy" "rds_management" {
+  count = var.enable_instance_management && length(var.rds_instance_arns) > 0 ? 1 : 0
+
+  name        = "${var.project}-${var.environment}-rds-management-policy"
+  description = "Policy to allow developers to start/stop RDS instances"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "RDSInstanceManagement"
+        Effect = "Allow"
+        Action = [
+          "rds:StartDBInstance",
+          "rds:StopDBInstance"
+        ]
+        Resource = var.rds_instance_arns
+      },
+      {
+        Sid    = "RDSDescribe"
+        Effect = "Allow"
+        Action = [
+          "rds:DescribeDBInstances",
+          "rds:DescribeDBClusters"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_group_policy_attachment" "rds_management" {
+  count = var.enable_instance_management && length(var.rds_instance_arns) > 0 ? 1 : 0
+
+  group      = aws_iam_group.developers.name
+  policy_arn = aws_iam_policy.rds_management[0].arn
+}
+
+# EC2 Instance Management Policy (restricted by Project tag)
+resource "aws_iam_policy" "ec2_management" {
+  count = var.enable_instance_management && length(var.ec2_instance_arns) > 0 ? 1 : 0
+
+  name        = "${var.project}-${var.environment}-ec2-management-policy"
+  description = "Policy to allow developers to start/stop EC2 instances"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "EC2InstanceManagement"
+        Effect = "Allow"
+        Action = [
+          "ec2:StartInstances",
+          "ec2:StopInstances"
+        ]
+        Resource = var.ec2_instance_arns
+        Condition = {
+          StringEquals = {
+            "aws:ResourceTag/Project" = var.project
+          }
+        }
+      },
+      {
+        Sid    = "EC2Describe"
+        Effect = "Allow"
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceStatus"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_group_policy_attachment" "ec2_management" {
+  count = var.enable_instance_management && length(var.ec2_instance_arns) > 0 ? 1 : 0
+
+  group      = aws_iam_group.developers.name
+  policy_arn = aws_iam_policy.ec2_management[0].arn
+}
+
+# =============================================================================
+# IAM Users
+# =============================================================================
+
 # IAM Users
 resource "aws_iam_user" "members" {
   for_each = { for user in var.team_members : user.username => user }
