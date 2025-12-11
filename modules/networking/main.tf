@@ -23,10 +23,11 @@ resource "aws_internet_gateway" "main" {
 }
 
 # Public subnet
+# Using fixed offset (0-63) to ensure CIDR doesn't conflict with private subnets (128+)
 resource "aws_subnet" "public" {
   count                   = length(var.availability_zones)
   vpc_id                  = aws_vpc.main.id
-  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index)
+  cidr_block              = cidrsubnet(var.vpc_cidr, 8, count.index + 64)
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
 
@@ -38,10 +39,11 @@ resource "aws_subnet" "public" {
 }
 
 # Private subnet
+# Using fixed offset (128) to ensure CIDR doesn't change when AZs are added
 resource "aws_subnet" "private" {
   count             = length(var.availability_zones)
   vpc_id            = aws_vpc.main.id
-  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + length(var.availability_zones))
+  cidr_block        = cidrsubnet(var.vpc_cidr, 8, count.index + 128)
   availability_zone = var.availability_zones[count.index]
 
   tags = {
@@ -208,6 +210,11 @@ resource "aws_vpc_endpoint" "secretsmanager" {
     Name        = "${var.project}-${var.environment}-secretsmanager-endpoint"
     Environment = var.environment
     Project     = var.project
+  }
+
+  # Ensure endpoint is updated before subnet is destroyed
+  lifecycle {
+    create_before_destroy = true
   }
 }
 

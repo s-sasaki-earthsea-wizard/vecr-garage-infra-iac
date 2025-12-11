@@ -1,11 +1,12 @@
-# Get latest Amazon Linux 2023 AMI (ARM64 for t4g instances)
-data "aws_ami" "amazon_linux_2023" {
+# Get latest Ubuntu 24.04 LTS Minimal AMI (ARM64 for t4g instances)
+# Ubuntu Minimal is lightweight and ideal for bastion hosts
+data "aws_ami" "ubuntu_minimal" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-arm64"]
+    values = ["ubuntu-minimal/images/hvm-ssd-gp3/ubuntu-noble-24.04-arm64-minimal-*"]
   }
 
   filter {
@@ -14,8 +15,8 @@ data "aws_ami" "amazon_linux_2023" {
   }
 
   filter {
-    name   = "root-device-type"
-    values = ["ebs"]
+    name   = "architecture"
+    values = ["arm64"]
   }
 }
 
@@ -48,36 +49,29 @@ resource "aws_security_group" "bastion" {
   })
 }
 
-# User data script to configure SSH public keys
+# User data script using cloud-init for reliability
 locals {
+  ssh_keys_list = [for username, key in var.ssh_public_keys : key]
+
   user_data = <<-EOF
-    #!/bin/bash
-    set -e
+#cloud-config
+package_update: true
+packages:
+  - postgresql-client
 
-    # Create .ssh directory for ec2-user
-    mkdir -p /home/ec2-user/.ssh
-    chmod 700 /home/ec2-user/.ssh
-
-    # Add SSH public keys
-    cat > /home/ec2-user/.ssh/authorized_keys << 'KEYS'
-    %{for username, key in var.ssh_public_keys~}
-    # ${username}
-    ${key}
-    %{endfor~}
-    KEYS
-
-    # Set permissions
-    chmod 600 /home/ec2-user/.ssh/authorized_keys
-    chown -R ec2-user:ec2-user /home/ec2-user/.ssh
-
-    # Install PostgreSQL client for RDS connection
-    dnf install -y postgresql15
+users:
+  - default
+  - name: ubuntu
+    ssh_authorized_keys:
+%{for key in local.ssh_keys_list~}
+      - ${key}
+%{endfor~}
   EOF
 }
 
 # Bastion EC2 Instance (Spot)
 resource "aws_instance" "bastion" {
-  ami           = data.aws_ami.amazon_linux_2023.id
+  ami           = data.aws_ami.ubuntu_minimal.id
   instance_type = var.instance_type
   subnet_id     = var.subnet_id
 

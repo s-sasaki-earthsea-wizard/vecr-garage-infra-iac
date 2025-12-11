@@ -165,6 +165,47 @@ secret-list-all: check-env ## List all secrets in Secrets Manager for this proje
 		--query 'SecretList[].Name' --output text | tr '\t' '\n'
 
 # ------------------------------------------------------------
+# Bastion / SSH commands
+# ------------------------------------------------------------
+
+ssh-bastion: check-env ## Connect to Bastion host via SSH
+	@BASTION_IP=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_public_ip 2>/dev/null); \
+	if [ -z "$$BASTION_IP" ] || [ "$$BASTION_IP" = "" ]; then \
+		echo "Error: Bastion is not deployed or IP not available"; \
+		exit 1; \
+	fi; \
+	echo "Connecting to Bastion: ubuntu@$$BASTION_IP"; \
+	ssh ubuntu@$$BASTION_IP
+
+rds-tunnel: check-env ## Create SSH tunnel for RDS access (localhost:5432 -> RDS)
+	@BASTION_IP=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_public_ip 2>/dev/null); \
+	RDS_HOST=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw rds_address 2>/dev/null); \
+	if [ -z "$$BASTION_IP" ] || [ "$$BASTION_IP" = "" ]; then \
+		echo "Error: Bastion is not deployed or IP not available"; \
+		exit 1; \
+	fi; \
+	if [ -z "$$RDS_HOST" ] || [ "$$RDS_HOST" = "" ]; then \
+		echo "Error: RDS is not deployed or address not available"; \
+		exit 1; \
+	fi; \
+	echo "Creating SSH tunnel: localhost:5432 -> $$RDS_HOST:5432"; \
+	echo "Press Ctrl+C to close the tunnel"; \
+	ssh -L 5432:$$RDS_HOST:5432 ubuntu@$$BASTION_IP
+
+rds-credentials: check-env ## Show RDS connection credentials
+	@echo "============================================================"
+	@echo "RDS Connection Credentials"
+	@echo "============================================================"
+	@AWS_PROFILE=$(AWS_PROFILE) aws secretsmanager get-secret-value \
+		--secret-id $(PROJECT)-$(ENVIRONMENT)-db-credentials \
+		--query 'SecretString' --output text | jq -r '"Host:     \(.host)\nPort:     \(.port)\nDatabase: \(.dbname)\nUsername: \(.username)\nPassword: \(.password)"'
+	@echo "============================================================"
+	@echo "Connection command (from Bastion):"
+	@AWS_PROFILE=$(AWS_PROFILE) aws secretsmanager get-secret-value \
+		--secret-id $(PROJECT)-$(ENVIRONMENT)-db-credentials \
+		--query 'SecretString' --output text | jq -r '"psql -h \(.host) -U \(.username) -d \(.dbname)"'
+
+# ------------------------------------------------------------
 # Destroy commands
 # ------------------------------------------------------------
 

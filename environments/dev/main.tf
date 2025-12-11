@@ -205,11 +205,14 @@ module "iam_users" {
 
   team_members = var.team_members
 
-  # Attach Secrets Manager access policies (both lambda and app secrets)
-  secrets_manager_policy_arns = {
-    lambda_secrets = module.secrets_manager_lambda.access_policy_arn
-    app_secrets    = module.secrets_manager_app.access_policy_arn
-  }
+  # Attach Secrets Manager access policies (lambda, app, and db secrets)
+  secrets_manager_policy_arns = merge(
+    {
+      lambda_secrets = module.secrets_manager_lambda.access_policy_arn
+      app_secrets    = module.secrets_manager_app.access_policy_arn
+    },
+    var.create_rds ? { db_credentials = module.rds[0].db_credentials_access_policy_arn } : {}
+  )
 
   # Grant access to S3 bucket
   s3_bucket_arn = module.s3.bucket_arn

@@ -53,3 +53,8 @@ output "db_credentials_secret_name" {
   description = "Name of the Secrets Manager secret containing DB credentials"
   value       = aws_secretsmanager_secret.db_credentials.name
 }
+
+output "db_credentials_access_policy_arn" {
+  description = "ARN of the IAM policy for accessing DB credentials"
+  value       = aws_iam_policy.db_credentials_access.arn
+}

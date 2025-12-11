@@ -153,5 +153,5 @@ output "bastion_ssh_command" {
 
 output "rds_ssh_tunnel_command" {
   description = "SSH tunnel command to connect to RDS via Bastion"
-  value       = var.create_rds && var.create_bastion ? "ssh -L 5432:${module.rds[0].db_instance_address}:5432 ec2-user@${module.bastion[0].public_ip}" : null
+  value       = var.create_rds && var.create_bastion ? "ssh -L 5432:${try(module.rds[0].db_instance_address, "pending")}:5432 ubuntu@${module.bastion[0].public_ip}" : null
 }

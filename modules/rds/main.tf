@@ -29,6 +29,32 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
   })
 }
 
+# IAM Policy for accessing DB credentials
+resource "aws_iam_policy" "db_credentials_access" {
+  name        = "${var.project}-${var.environment}-db-credentials-access-policy"
+  description = "Policy to access RDS database credentials in Secrets Manager"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = aws_secretsmanager_secret.db_credentials.arn
+      }
+    ]
+  })
+
+  tags = merge(var.tags, {
+    Name        = "${var.project}-${var.environment}-db-credentials-access-policy"
+    Environment = var.environment
+    Project     = var.project
+  })
+}
+
 # DB Subnet Group
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project}-${var.environment}-db-subnet-group"

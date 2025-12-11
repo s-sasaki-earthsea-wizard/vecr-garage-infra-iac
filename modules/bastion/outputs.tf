@@ -25,5 +25,5 @@ output "security_group_id" {
 
 output "ssh_connection_command" {
   description = "SSH command to connect to Bastion"
-  value       = "ssh ec2-user@${aws_instance.bastion.public_ip}"
+  value       = "ssh ubuntu@${aws_instance.bastion.public_ip}"
 }
