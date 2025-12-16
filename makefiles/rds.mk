@@ -3,22 +3,28 @@
 # ------------------------------------------------------------
 
 ssh-bastion: check-env ## Connect to Bastion host via SSH
-	@BASTION_IP=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_public_ip 2>/dev/null); \
-	if [ -z "$$BASTION_IP" ] || [ "$$BASTION_IP" = "" ]; then \
-		echo "Error: Bastion is not deployed or IP not available"; \
+	@BASTION_IP=$$(AWS_PROFILE=$(AWS_PROFILE) aws ec2 describe-instances \
+		--filters "Name=tag:Name,Values=$(PROJECT)-$(ENVIRONMENT)-bastion" "Name=instance-state-name,Values=running" \
+		--query 'Reservations[0].Instances[0].PublicIpAddress' --output text 2>/dev/null); \
+	if [ -z "$$BASTION_IP" ] || [ "$$BASTION_IP" = "None" ] || [ "$$BASTION_IP" = "null" ]; then \
+		echo "Error: Bastion is not running or IP not available"; \
 		exit 1; \
 	fi; \
 	echo "Connecting to Bastion: ubuntu@$$BASTION_IP"; \
 	ssh ubuntu@$$BASTION_IP
 
 rds-tunnel: check-env ## Create SSH tunnel for RDS access (localhost:5432 -> RDS)
-	@BASTION_IP=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_public_ip 2>/dev/null); \
-	RDS_HOST=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw rds_address 2>/dev/null); \
-	if [ -z "$$BASTION_IP" ] || [ "$$BASTION_IP" = "" ]; then \
-		echo "Error: Bastion is not deployed or IP not available"; \
+	@BASTION_IP=$$(AWS_PROFILE=$(AWS_PROFILE) aws ec2 describe-instances \
+		--filters "Name=tag:Name,Values=$(PROJECT)-$(ENVIRONMENT)-bastion" "Name=instance-state-name,Values=running" \
+		--query 'Reservations[0].Instances[0].PublicIpAddress' --output text 2>/dev/null); \
+	RDS_HOST=$$(AWS_PROFILE=$(AWS_PROFILE) aws rds describe-db-instances \
+		--db-instance-identifier $(PROJECT)-$(ENVIRONMENT)-db \
+		--query 'DBInstances[0].Endpoint.Address' --output text 2>/dev/null); \
+	if [ -z "$$BASTION_IP" ] || [ "$$BASTION_IP" = "None" ] || [ "$$BASTION_IP" = "null" ]; then \
+		echo "Error: Bastion is not running or IP not available"; \
 		exit 1; \
 	fi; \
-	if [ -z "$$RDS_HOST" ] || [ "$$RDS_HOST" = "" ]; then \
+	if [ -z "$$RDS_HOST" ] || [ "$$RDS_HOST" = "None" ] || [ "$$RDS_HOST" = "null" ]; then \
 		echo "Error: RDS is not deployed or address not available"; \
 		exit 1; \
 	fi; \
@@ -62,9 +68,11 @@ rds-status: check-env ## Show RDS instance status
 		--output table
 
 bastion-start: check-env ## Start Bastion EC2 instance
-	@INSTANCE_ID=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_instance_id 2>/dev/null); \
-	if [ -z "$$INSTANCE_ID" ]; then \
-		echo "Error: Bastion instance ID not found"; \
+	@INSTANCE_ID=$$(AWS_PROFILE=$(AWS_PROFILE) aws ec2 describe-instances \
+		--filters "Name=tag:Name,Values=$(PROJECT)-$(ENVIRONMENT)-bastion" \
+		--query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null); \
+	if [ -z "$$INSTANCE_ID" ] || [ "$$INSTANCE_ID" = "None" ] || [ "$$INSTANCE_ID" = "null" ]; then \
+		echo "Error: Bastion instance not found"; \
 		exit 1; \
 	fi; \
 	echo "Starting Bastion instance: $$INSTANCE_ID"; \
@@ -72,9 +80,11 @@ bastion-start: check-env ## Start Bastion EC2 instance
 	echo "✅ Bastion start initiated. Use 'make bastion-status' to check status."
 
 bastion-stop: check-env ## Stop Bastion EC2 instance
-	@INSTANCE_ID=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_instance_id 2>/dev/null); \
-	if [ -z "$$INSTANCE_ID" ]; then \
-		echo "Error: Bastion instance ID not found"; \
+	@INSTANCE_ID=$$(AWS_PROFILE=$(AWS_PROFILE) aws ec2 describe-instances \
+		--filters "Name=tag:Name,Values=$(PROJECT)-$(ENVIRONMENT)-bastion" \
+		--query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null); \
+	if [ -z "$$INSTANCE_ID" ] || [ "$$INSTANCE_ID" = "None" ] || [ "$$INSTANCE_ID" = "null" ]; then \
+		echo "Error: Bastion instance not found"; \
 		exit 1; \
 	fi; \
 	echo "Stopping Bastion instance: $$INSTANCE_ID"; \
@@ -82,13 +92,8 @@ bastion-stop: check-env ## Stop Bastion EC2 instance
 	echo "✅ Bastion stop initiated. Use 'make bastion-status' to check status."
 
 bastion-status: check-env ## Show Bastion EC2 instance status
-	@INSTANCE_ID=$$(cd environments/$(ENVIRONMENT) && AWS_PROFILE=$(AWS_PROFILE) terraform output -raw bastion_instance_id 2>/dev/null); \
-	if [ -z "$$INSTANCE_ID" ]; then \
-		echo "Error: Bastion instance ID not found"; \
-		exit 1; \
-	fi; \
-	AWS_PROFILE=$(AWS_PROFILE) aws ec2 describe-instances \
-		--instance-ids $$INSTANCE_ID \
+	@AWS_PROFILE=$(AWS_PROFILE) aws ec2 describe-instances \
+		--filters "Name=tag:Name,Values=$(PROJECT)-$(ENVIRONMENT)-bastion" \
 		--query 'Reservations[0].Instances[0].{Status:State.Name,PublicIP:PublicIpAddress,InstanceId:InstanceId}' \
 		--output table
 
