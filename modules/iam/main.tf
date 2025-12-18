@@ -51,7 +51,7 @@ resource "aws_iam_policy" "secrets_manager_access" {
         Action = [
           "ec2:DescribeInstances"
         ]
-        Effect = "Allow"
+        Effect   = "Allow"
         Resource = "*"
       }
     ]

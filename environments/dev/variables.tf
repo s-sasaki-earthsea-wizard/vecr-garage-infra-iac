@@ -209,6 +209,73 @@ variable "team_members" {
     role              = string
     create_access_key = bool
     console_access    = bool
+    ssh_public_key    = optional(string, "")
   }))
   default = []
+}
+
+# ------------------------------------------------------------
+# RDS Configuration
+# ------------------------------------------------------------
+
+variable "create_rds" {
+  description = "Whether to create RDS instance"
+  type        = bool
+  default     = false
+}
+
+variable "rds_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
+variable "rds_allocated_storage" {
+  description = "RDS allocated storage in GB"
+  type        = number
+  default     = 20
+}
+
+variable "rds_engine_version" {
+  description = "PostgreSQL engine version"
+  type        = string
+  default     = "16"
+}
+
+variable "rds_multi_az" {
+  description = "Enable Multi-AZ for RDS"
+  type        = bool
+  default     = false
+}
+
+# ------------------------------------------------------------
+# Bastion Configuration
+# ------------------------------------------------------------
+
+variable "create_bastion" {
+  description = "Whether to create Bastion host"
+  type        = bool
+  default     = false
+}
+
+variable "bastion_instance_type" {
+  description = "Bastion EC2 instance type"
+  type        = string
+  default     = "t4g.nano"
+}
+
+variable "bastion_use_spot" {
+  description = "Use spot instance for Bastion (On-Demand recommended for start/stop support)"
+  type        = bool
+  default     = false
+}
+
+# ------------------------------------------------------------
+# VPC Endpoints Configuration
+# ------------------------------------------------------------
+
+variable "create_vpc_endpoints" {
+  description = "Whether to create VPC endpoints"
+  type        = bool
+  default     = false
 }

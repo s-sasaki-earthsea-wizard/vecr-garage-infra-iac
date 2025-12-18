@@ -105,9 +105,9 @@ resource "aws_instance" "app_server" {
     sudo usermod -aG docker ubuntu
     
     # Add created users to docker group
-    %{ for user in var.users ~}
+    %{for user in var.users~}
     sudo usermod -aG docker ${user.username}
-    %{ endfor ~}
+    %{endfor~}
     
     # Ensure ubuntu user's home directory exists
     mkdir -p /home/ubuntu
@@ -129,16 +129,16 @@ resource "aws_instance" "app_server" {
     apt-get upgrade -y
     
     # Create users and set up SSH keys
-    %{ for user in var.users ~}
+    %{for user in var.users~}
     # Create user ${user.username}
     useradd -m -s /bin/bash ${user.username}
     mkdir -p /home/${user.username}/.ssh
     chmod 700 /home/${user.username}/.ssh
     
     # Add user's SSH keys
-    %{ for key in user.ssh_keys ~}
+    %{for key in user.ssh_keys~}
     echo "${key}" >> /home/${user.username}/.ssh/authorized_keys
-    %{ endfor ~}
+    %{endfor~}
     chmod 600 /home/${user.username}/.ssh/authorized_keys
     chown -R ${user.username}:${user.username} /home/${user.username}/.ssh
     
@@ -151,7 +151,7 @@ resource "aws_instance" "app_server" {
     echo -e "[default]\nregion = ap-northeast-1" > /home/${user.username}/.aws/config
     chmod 600 /home/${user.username}/.aws/config
     chown -R ${user.username}:${user.username} /home/${user.username}/.aws
-    %{ endfor ~}
+    %{endfor~}
     
     # Setup application directory
     mkdir -p /opt/${var.project}
@@ -177,7 +177,7 @@ resource "aws_eip" "app_server" {
   count    = var.create_elastic_ip ? 1 : 0
   domain   = "vpc"
   instance = aws_instance.app_server.id
-  
+
   tags = {
     Name        = "${var.project}-${var.environment}-app-server-eip"
     Environment = var.environment
